@@ -1,0 +1,246 @@
+use autonic;
+
+CREATE TABLE mensaje (
+  Idmensaje int auto_increment primary key,
+  Fecha date ,
+  Nombre varchar(50),
+  Telefono varchar(20),
+  Email varchar(50),
+  Detalle varchar(256),
+  Estado tinyint(1)
+);
+
+CREATE TABLE persona (
+  Idpersona INT AUTO_INCREMENT PRIMARY KEY,
+  Tipopersona VARCHAR(20),
+  Nombres VARCHAR(250) NOT NULL,
+  Num_documento VARCHAR(20)  UNIQUE,
+  Tipo_documento VARCHAR(20),
+  Telefono VARCHAR(20),
+  Direccion VARCHAR(200),
+  Estado TINYINT(1)
+);
+
+CREATE TABLE usuario (
+  Idusuario INT AUTO_INCREMENT PRIMARY KEY,
+  Login VARCHAR(100) NOT NULL,
+  Clave VARCHAR(100) NOT NULL,
+  Email VARCHAR(90) UNIQUE,
+  Fecha_creacion DATETIME,
+  Cargo VARCHAR(50),
+  Imagen VARCHAR(150),
+  Idpersona INT,
+  FOREIGN KEY (Idpersona) REFERENCES persona(Idpersona)
+);
+
+CREATE TABLE proveedor (
+    Idproveedor INT AUTO_INCREMENT PRIMARY KEY,
+    Nombre_empresa VARCHAR(255),
+    Idpersona INT,
+    FOREIGN KEY (Idpersona) REFERENCES persona(Idpersona)
+);
+
+CREATE TABLE unidadmedida (
+  Idunidadmedida INT AUTO_INCREMENT PRIMARY KEY,
+  Unidadmedida VARCHAR(30),
+  Descripcion VARCHAR(256),
+  Estado TINYINT(1)
+);
+CREATE TABLE categoria (
+  Idcategoria INT AUTO_INCREMENT PRIMARY KEY,
+  Nombre VARCHAR(30),
+  Descripcion VARCHAR(256),
+  Estado TINYINT(1)
+);
+
+CREATE TABLE articulo (
+  Idarticulo INT AUTO_INCREMENT PRIMARY KEY,
+  Nombre VARCHAR(50),
+  Descripcion VARCHAR(256),
+  Marca VARCHAR(80),
+  Cantidad INT,
+  Codigo VARCHAR(60),
+  Idcategoria INT,
+  Idunidadmedida INT,
+  Imagen VARCHAR(70),
+  Estado TINYINT(1),
+  FOREIGN KEY (Idcategoria) REFERENCES categoria(Idcategoria),
+  FOREIGN KEY (Idunidadmedida) REFERENCES  unidadmedida(Idunidadmedida)
+);
+
+
+CREATE TABLE ingreso (
+  Idingreso INT AUTO_INCREMENT PRIMARY KEY,
+  Fecha DATE,
+  Tipocomprobante VARCHAR(30),
+  Numero INT,
+  Preciototal DECIMAL(9,2),
+  Idproveedor INT,
+  Idusuario INT,
+  Estado VARCHAR(20),  -- Esto puede ser 'pendiente', 'completado', etc.
+  FOREIGN KEY (Idproveedor) REFERENCES proveedor(Idproveedor),
+  FOREIGN KEY (Idusuario) REFERENCES usuario(Idusuario)
+);
+
+CREATE TABLE articulo_ingreso (
+  Idarticulo_ingreso INT AUTO_INCREMENT PRIMARY KEY,
+  Precio_compra DECIMAL(9,2),
+  Precio_venta DECIMAL(9,2),
+  Cantidad_ingreso INT,
+  Idarticulo INT,
+  Idingreso INT,
+  FOREIGN KEY (Idarticulo) REFERENCES articulo(Idarticulo),
+  FOREIGN KEY (Idingreso) REFERENCES ingreso(Idingreso)
+);
+
+CREATE TABLE vehiculo (
+  Idvehiculo INT AUTO_INCREMENT PRIMARY KEY,
+  Fecha DATETIME,
+  Placa VARCHAR(50) UNIQUE,
+  Marca VARCHAR(50),
+  Color VARCHAR(30),
+  Observaciones VARCHAR(200),
+  Tipo VARCHAR(50),
+  Imagen VARCHAR(200),
+  Idcliente INT,
+  Estado VARCHAR(50),
+  FOREIGN KEY (Idcliente) REFERENCES persona(Idpersona)
+);
+
+CREATE TABLE item_diagnostico(
+  Iditem_diagnostico INT AUTO_INCREMENT PRIMARY KEY,
+  Nombre VARCHAR(30),
+  Descripcion VARCHAR(256),
+  Precio DECIMAL(9,2),
+  Estado TINYINT(1)
+);
+
+CREATE TABLE cotizacion (
+  Idcotizacion INT AUTO_INCREMENT PRIMARY KEY,
+  Fecha DATETIME,
+  Tipo_comprobante VARCHAR(30),
+  Num_comprobante INT(11),
+  Descripcion VARCHAR(255),
+  Total DECIMAL(9,2),
+  Idusuario INT,
+  Idvehiculo INT,
+  Estado VARCHAR(15),
+  FOREIGN KEY (Idusuario) REFERENCES usuario(Idusuario),
+  FOREIGN KEY (Idvehiculo) REFERENCES vehiculo(Idvehiculo)
+);
+
+CREATE TABLE item_diagnostico_cotizacion (
+  Iditem_diagnostico_cotizacion INT AUTO_INCREMENT PRIMARY KEY,
+  Iditem_diagnostico INT,
+  Idcotizacion INT,
+  Estado CHAR(1), -- 'B' para bien (verde), 'M' para mal (rojo)
+  Precio DECIMAL(7,2), 
+  Observaciones VARCHAR(100),
+  FOREIGN KEY (Iditem_diagnostico) REFERENCES item_diagnostico(Iditem_diagnostico),
+  FOREIGN KEY (Idcotizacion) REFERENCES cotizacion(Idcotizacion)
+);
+
+CREATE TABLE cotizacion_articulo (
+  Idcotizacion_articulo INT AUTO_INCREMENT PRIMARY KEY,
+  Precio_compra DECIMAL(7,2),
+  Precio_cotizacion DECIMAL(7,2),
+  Descuento DECIMAL(7,2),
+  Cantidad_cotizacion INT,
+  Idcotizacion INT,
+  Idarticulo INT,
+  FOREIGN KEY (Idcotizacion) REFERENCES  cotizacion(Idcotizacion),
+  FOREIGN KEY (Idarticulo) REFERENCES articulo(Idarticulo)
+);
+
+CREATE TABLE servicio(
+  Idservicio INT AUTO_INCREMENT PRIMARY KEY,
+  Fecha DATETIME,
+  Fecha_entrega DATETIME,
+  Tipo_comprobante VARCHAR(30),
+  Num_comprobante INT,
+  Descripcion VARCHAR(255),
+  Total DECIMAL(9,2),
+  Idusuario INT,
+  Idvehiculo INT,
+  Estado VARCHAR(15),
+  FOREIGN KEY (Idusuario) REFERENCES usuario(Idusuario),
+  FOREIGN KEY (Idvehiculo) REFERENCES vehiculo(Idvehiculo)
+);
+
+CREATE TABLE item_diagnostico_servicio (
+  Iddiagnostico_servicio INT AUTO_INCREMENT PRIMARY KEY,
+  Iditem_diagnostico INT,
+  Idservicio INT,
+  Estado CHAR(1), -- 'B' para bien (verde), 'M' para mal (rojo)
+  Precio DECIMAL(7,2),
+  Observaciones VARCHAR(100),
+  FOREIGN KEY (Iditem_diagnostico) REFERENCES item_diagnostico(Iditem_diagnostico),
+  FOREIGN KEY (Idservicio) REFERENCES servicio(Idservicio)
+);
+
+CREATE TABLE servicio_articulo (
+  Idservicio_articulo INT AUTO_INCREMENT PRIMARY KEY,
+  Precio_compra DECIMAL(7,2),
+  Precio_venta DECIMAL(7,2),
+  Descuento DECIMAL(7,2),
+  Cantidad_venta INT,
+  Idservicio INT,
+  Idarticulo INT,
+  FOREIGN KEY (Idservicio) REFERENCES servicio(Idservicio),
+  FOREIGN KEY (Idarticulo) REFERENCES articulo(Idarticulo)
+);
+
+CREATE TABLE pago_servicio (
+  Idpago INT AUTO_INCREMENT PRIMARY KEY,
+  Idservicio INT,
+  Fecha DATETIME,
+  Monto DECIMAL(9,2), 
+  Cambio DECIMAL(9,2), 
+  Acuenta DECIMAL(9,2),        
+  Saldo DECIMAL(9,2),        
+  Metodo_pago VARCHAR(30),
+  FOREIGN KEY (Idservicio) REFERENCES servicio(Idservicio)
+);
+
+
+CREATE TABLE venta (
+  Idventa INT AUTO_INCREMENT PRIMARY KEY,
+  Fecha DATE,
+  Hora TIME,
+  Tipo_comprobante VARCHAR(30),
+  Num_comprobante INT,
+  Tipo VARCHAR(30),
+  Monto DECIMAL(9,2),
+  Cambio DECIMAL(9,2),
+  Total DECIMAL(9,2),
+  Idusuario INT,
+  Idcliente INT,
+  Estado VARCHAR(15),
+  FOREIGN KEY (Idusuario) REFERENCES usuario(Idusuario),
+  FOREIGN KEY (Idcliente) REFERENCES persona(Idpersona)
+);
+
+CREATE TABLE articulo_venta (
+  Idarticulo_venta INT AUTO_INCREMENT PRIMARY KEY,
+  Precio_compra DECIMAL(7,2),
+  Precio_venta DECIMAL(7,2),
+  Descuento DECIMAL(7,2),
+  Cantidad_venta INT,
+  Idarticulo INT,
+  Idventa INT,
+  FOREIGN KEY (Idarticulo) REFERENCES articulo(Idarticulo),
+  FOREIGN KEY (Idventa) REFERENCES venta(Idventa)
+);
+
+CREATE TABLE permiso (
+  Idpermiso INT AUTO_INCREMENT PRIMARY KEY,
+  Nombre VARCHAR(30)
+);
+
+CREATE TABLE usuario_permiso (
+  Idusuario_permiso INT AUTO_INCREMENT PRIMARY KEY,
+  Idusuario INT,
+  Idpermiso INT,
+  FOREIGN KEY (Idusuario) REFERENCES usuario(Idusuario),
+  FOREIGN KEY (Idpermiso) REFERENCES permiso(Idpermiso)
+);

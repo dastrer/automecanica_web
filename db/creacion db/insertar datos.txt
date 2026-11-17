@@ -1,0 +1,103 @@
+INSERT INTO `permiso` (`Idpermiso`, `Nombre`) VALUES
+
+(1, 'Escritorio'),
+(2, 'Almacen'),
+(3, 'Compra'),
+(4, 'Vehículos'),
+(5, 'Servicio'),
+(6, 'Venta'),
+(7, 'Acceso'),
+(8, 'Consultas Servicio'),
+(9, 'Consultas Venta'),
+(10, 'Consultas Compra');
+
+
+DELIMITER //
+CREATE TRIGGER actualizar_inventario_ingreso
+AFTER INSERT ON articulo_ingreso
+FOR EACH ROW
+BEGIN
+    UPDATE articulo
+    SET Cantidad = Cantidad + NEW.Cantidad_ingreso
+    WHERE Idarticulo = NEW.Idarticulo;
+END;
+//
+DELIMITER ;
+
+DELIMITER //
+CREATE TRIGGER trg_actualizar_inventario_servicio
+AFTER INSERT ON servicio_articulo
+FOR EACH ROW
+BEGIN
+    UPDATE articulo
+    SET Cantidad = Cantidad - NEW.Cantidad_venta
+    WHERE Idarticulo = NEW.Idarticulo;
+END;
+//
+DELIMITER ;
+
+
+DELIMITER //
+CREATE TRIGGER trg_no_servicio_sin_stock
+BEFORE INSERT ON servicio_articulo
+FOR EACH ROW
+BEGIN
+    DECLARE stock_actual INT;
+
+    SELECT Cantidad INTO stock_actual
+    FROM articulo
+    WHERE Idarticulo = NEW.Idarticulo;
+
+    IF stock_actual < NEW.Cantidad_venta THEN
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = 'Stock insuficiente para aplicar el artículo en el servicio';
+    END IF;
+END;
+//
+DELIMITER ;
+
+
+
+DELIMITER //
+CREATE TRIGGER actualizar_inventario_venta
+AFTER INSERT ON articulo_venta
+FOR EACH ROW
+BEGIN
+    UPDATE articulo
+    SET Cantidad = Cantidad - NEW.Cantidad_venta
+    WHERE Idarticulo = NEW.Idarticulo;
+END;
+//
+DELIMITER ;
+
+
+
+-- Trigger para evitar ventas sin stock
+DELIMITER //
+CREATE TRIGGER trg_no_venta_sin_stock
+BEFORE INSERT ON articulo_venta
+FOR EACH ROW
+BEGIN
+    DECLARE stock_actual INT;
+
+    SELECT Cantidad INTO stock_actual
+    FROM articulo
+    WHERE Idarticulo = NEW.Idarticulo;
+
+    IF stock_actual < NEW.Cantidad_venta THEN
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = 'Stock insuficiente para realizar la venta';
+    END IF;
+END;
+//
+DELIMITER ;
+
+
+
+
+
+
+
+
+
+
